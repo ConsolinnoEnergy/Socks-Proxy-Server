@@ -5,7 +5,6 @@ CPM_modules/
 Makefile
 _deps/
 build/
-cmake/
 cmake_install.cmake
 cpm-package-lock.cmake
 main
