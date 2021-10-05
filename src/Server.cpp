@@ -23,7 +23,7 @@ void Server::start(){
 
     // read config file just once and use it in every session 
     ConfigReader configReader;
-    configReader.readConf("../config.json");
+    configReader.readConf("config.json");
 
     // create a new thread and log every minutes.
     std::thread logThread(&Server::logEveryMinute, this);

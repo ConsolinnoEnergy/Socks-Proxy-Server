@@ -9,8 +9,8 @@ using boost::asio::ip::tcp;
 // constructor of session class
 Session::Session(tcp::socket in_socket, unsigned session_id, size_t buffer_size, std::string logType, ConfigReader configReader_):
     in_socket_(std::move(in_socket)), 
-    out_socket_(in_socket.get_io_service()), 
-    resolver(in_socket.get_io_service()),
+    out_socket_(in_socket.get_executor()), 
+    resolver(in_socket.get_executor()),
     in_buf_(buffer_size), 
     out_buf_(buffer_size), 
     session_id_(session_id),
