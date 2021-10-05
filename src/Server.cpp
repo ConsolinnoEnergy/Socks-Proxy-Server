@@ -19,11 +19,11 @@ Server::Server(boost::asio::io_service& io_service, short port, unsigned buffer_
 }
 
 // run
-void Server::start(){
+void Server::start(std::string config_path){
 
     // read config file just once and use it in every session 
     ConfigReader configReader;
-    configReader.readConf("config.json");
+    configReader.readConf(config_path);
 
     // create a new thread and log every minutes.
     std::thread logThread(&Server::logEveryMinute, this);

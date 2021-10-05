@@ -7,12 +7,16 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-int main(){
+int main(int argc, char* argv[]){
+
+	if(argc < 2){
+		return -1;
+	}
 
 	// Create a root
 	boost::property_tree::ptree root;
 	// Load the json file in this ptree
-	boost::property_tree::read_json("config.json", root);
+	boost::property_tree::read_json(argv[1], root);
 	std::string type = root.get<std::string> ("LogLevel");
 	
 	Logger logger1(type);
@@ -29,7 +33,7 @@ int main(){
 
 		boost::asio::io_service io_service;
 		Server server(io_service, port, buffer_size, logger1.getConfigType());
-		server.start();
+		server.start(argv[1]);
 		io_service.run();
 	
 	} catch (std::exception& e) {

@@ -18,7 +18,7 @@ public:
 	// constructor of server class
 	Server(boost::asio::io_service& io_service, short port, unsigned buffer_size, std::string logType);
 
-	void start();
+	void start(std::string config_path);
 	
 	// print (log) the amount of logVariables
 	void printLogVars (vector<int> preActive);
