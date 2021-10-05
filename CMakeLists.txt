@@ -1,5 +1,5 @@
 # minimum version of CMake that can be used
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.14 FATAL_ERROR)
 
 # project name
 PROJECT(Socks-Proxy-Server)
@@ -9,7 +9,14 @@ FilE(GLOB SOURCES "src/*.cpp")
 
 # include headers
 include_directories(include)
-include_directories(spdlog/include)
+# include_directories(spdlog/include)
+
+include(cmake/CPM.cmake)
+
+CPMAddPackage(
+    NAME spdlog
+    GITHUB_REPOSITORY gabime/spdlog
+    VERSION 1.7.0)
 
 # include boost libraries
 find_package(Boost 1.65.1 COMPONENTS system thread REQUIRED)
