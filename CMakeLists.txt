@@ -12,11 +12,7 @@ include_directories(include)
 # include_directories(spdlog/include)
 
 include(cmake/CPM.cmake)
-
-CPMAddPackage(
-    NAME spdlog
-    GITHUB_REPOSITORY gabime/spdlog
-    VERSION 1.7.0)
+include_directories(spdlog/include)
 
 # include boost libraries
 find_package(Boost 1.65.1 COMPONENTS system thread REQUIRED)
