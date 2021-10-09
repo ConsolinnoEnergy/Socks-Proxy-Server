@@ -6,6 +6,10 @@
 #include <sstream> // for ostringstream used in logger
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
+#include <boost/asio/ssl.hpp>
+
+namespace ssl = boost::asio::ssl;
+using ssl_socket = ssl::stream<tcp::socket>;
 
 int main(int argc, char* argv[]){
 
@@ -32,6 +36,9 @@ int main(int argc, char* argv[]){
 	try {
 
 		boost::asio::io_service io_service;
+		ssl::context ssl_context(ssl::context::tls);
+		// boost::asio::io_context io_context;
+		ssl_socket socket(io_service, ssl_context);
 		Server server(io_service, port, buffer_size, logger1.getConfigType());
 		server.start(argv[1]);
 		io_service.run();

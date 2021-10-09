@@ -18,6 +18,9 @@ include_directories(spdlog/include)
 find_package(Boost 1.65.1 COMPONENTS system thread REQUIRED)
 include_directories(${Boost_INCLUDE_DIR})
 
+# set(OPENSSL_USE_STATIC_LIBS TRUE)
+# find_package(OpenSSL REQUIRED)
+
 # add executable
 ADD_EXECUTABLE (main ${SOURCES})
-TARGET_LINK_LIBRARIES(main LINK_PUBLIC ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(main LINK_PUBLIC ${Boost_LIBRARIES} ssl crypto)
