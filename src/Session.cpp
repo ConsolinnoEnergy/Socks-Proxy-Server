@@ -5,9 +5,10 @@
 #include <inttypes.h>
 
 using boost::asio::ip::tcp;
+namespace ssl = boost::asio::ssl;
 
 // constructor of session class
-Session::Session(tcp::socket in_socket, unsigned session_id, size_t buffer_size, std::string logType, ConfigReader configReader_):
+Session::Session(tcp::socket in_socket, unsigned session_id, size_t buffer_size, std::string logType, ConfigReader configReader_, boost::asio::ssl::context& context):
     in_socket_(std::move(in_socket)), 
     out_socket_(in_socket.get_executor()), 
     resolver(in_socket.get_executor()),
@@ -16,6 +17,7 @@ Session::Session(tcp::socket in_socket, unsigned session_id, size_t buffer_size,
     session_id_(session_id),
 	configReader (configReader_),
 	isFilter (0),
+	socket_(in_socket.get_executor(), context),
 	isLog ("NO") {
 
         logger3.setConfigType(logType);
@@ -56,16 +58,19 @@ void Session::read_socks5_handshake()
 					return;
 				}
 
-				uint8_t num_methods = in_buf_[1];
+				int socksv5_stage = in_buf_[1];
+				int auth_method = in_buf_[2];
 				// Prepare answer
 				in_buf_[1] = 0xFF;
 
-				// Only 0x00 - 'NO AUTHENTICATION REQUIRED' is now supported
-				for (uint8_t method = 0; method < num_methods; ++method)
-					if (in_buf_[2 + method] == 0x00) {
-						in_buf_[1] = 0x00;
-						break; 
-					}
+				// Check for Auth Method 6 - only 'SSL Auth' is supported
+				if (socksv5_stage == 0x01 && auth_method == 0x06) {
+					std::ostringstream tmp2;  
+					tmp2 << "SOCKS5 handshake auth method SSL: " << auth_method;
+					logger3.log(tmp2.str(), "info");
+
+					in_buf_[1] = 0x06;
+				}
 				
 				write_socks5_handshake();
 			
@@ -90,7 +95,7 @@ void Session::write_socks5_handshake(){
 
 			if (!ec){
 				
-				if (in_buf_[1] == 0xFF){
+				if (in_buf_[1] == -1){
 
 					std::ostringstream tmp;  
 					tmp << session_id_ << ": Closing Session; No appropriate auth method found. ";
@@ -99,7 +104,7 @@ void Session::write_socks5_handshake(){
 					return;
 				}
 			
-				read_socks5_request();
+				start_tls_handshake();
 				
 			}else{
 				
@@ -108,6 +113,29 @@ void Session::write_socks5_handshake(){
 				logger3.log(tmp.str(), "error");
 			}
 		});
+}
+
+void Session::start_tls_handshake(){
+	auto self(shared_from_this());
+
+	socket_.lowest_layer().set_option(tcp::no_delay(true));
+
+	// socket_.set_verify_mode(ssl::verify_peer);
+	socket_.handshake(ssl_socket::server);
+
+	// socket_.async_handshake(boost::asio::ssl::stream_base::server, 
+    //     [this, self](const boost::system::error_code& error){
+	// 		std::ostringstream tmp;
+	// 		if (!error) {
+	// 			tmp << "TLS handshake started";
+	// 			logger3.log(tmp.str(), "info");
+	// 			do_read(3);
+	// 		}else{
+	// 			tmp << "TLS handshake canceled: " << error.message();
+	// 			logger3.log(tmp.str(), "error");
+	// 		}
+    //     });
+
 }
 
 

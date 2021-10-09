@@ -7,6 +7,7 @@
 #include <boost/asio.hpp>
 
 using boost::asio::ip::tcp;
+typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
 
 #ifndef SERVER_H
 #define SERVER_H
@@ -42,6 +43,7 @@ private:
 	size_t buffer_size_;
 	unsigned session_id_0;
 	Logger logger2;
+	boost::asio::ssl::context context_;
 };
 
 #endif

@@ -4,8 +4,10 @@
 #include <boost/asio.hpp>
 #include <iostream>
 #include <mutex>
+#include <boost/asio/ssl.hpp>
 
 using boost::asio::ip::tcp;
+typedef boost::asio::ssl::stream<boost::asio::ip::tcp::socket> ssl_socket;
 
 #ifndef SESSION_H
 #define SESSION_H
@@ -16,7 +18,7 @@ class Session : public std::enable_shared_from_this<Session> {
 public:
 
 	// constructor of session class
-    Session(tcp::socket in_socket, unsigned session_id, size_t buffer_size, std::string logType, ConfigReader configReader_);
+    Session(tcp::socket in_socket, unsigned session_id, size_t buffer_size, std::string logType, ConfigReader configReader_, boost::asio::ssl::context& context);
 
 	void start();
 
@@ -30,6 +32,14 @@ private:
 	// proxy write handshake to client
 	// it contains choose method by proxy
 	void write_socks5_handshake();
+
+	// proxy reads handshake that comes from client
+	// it contains methods that client supports
+	void start_tls_handshake();
+	
+	// proxy write handshake to client
+	// it contains choose method by proxy
+	void handle_tls_handshake(const boost::system::error_code& error);
 
 	// after initial handshake, client sends a request to proxy
 	// which contains port and IP of the server that it wants to connect
@@ -75,6 +85,7 @@ private:
 	bool isFilter;
 	std::string isLog;
 	mutex mtx;
+	ssl_socket socket_;
 
 };
 

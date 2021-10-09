@@ -4,17 +4,25 @@
 #include <boost/asio.hpp>
 #include <thread>
 #include <mutex>
+#include <boost/asio/ssl.hpp>
 
 using boost::asio::ip::tcp;
+namespace ssl = boost::asio::ssl;
 
 // constructor of server class
 Server::Server(boost::asio::io_service& io_service, short port, unsigned buffer_size, std::string logType) : 
     acceptor_(io_service, tcp::endpoint(tcp::v4(), port)), 
     in_socket_(io_service),
     buffer_size_(buffer_size),
+    context_(boost::asio::ssl::context::sslv23),
     session_id_0 (0) {
 
         logger2.setConfigType(logType);
+        context_.set_options(
+        boost::asio::ssl::context::default_workarounds
+        | boost::asio::ssl::context::no_sslv2);
+        context_.use_certificate_chain_file("certificates/smgw.pem");
+        context_.use_private_key_file("certificates/smgw.key", boost::asio::ssl::context::pem);
 
 }
 
@@ -37,12 +45,12 @@ void Server::start(std::string config_path){
 //asynchronously accept new connections and create session
 void Server::do_accept(ConfigReader configReader){
 
-    acceptor_.async_accept(in_socket_, [this, configReader](boost::system::error_code ec){
+    acceptor_.async_accept(in_socket_.lowest_layer(), [this, configReader](boost::system::error_code ec){
 
         if (!ec){     
 
             // create new session and start handshakes...
-            std::make_shared<Session>(std::move(in_socket_), session_id_0 ++, buffer_size_, logger2.getConfigType(), configReader)->start();
+            std::make_shared<Session>(std::move(in_socket_), session_id_0 ++, buffer_size_, logger2.getConfigType(), configReader, context_)->start();
 
         } else{
 
