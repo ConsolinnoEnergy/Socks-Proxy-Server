@@ -19,8 +19,9 @@ Server::Server(boost::asio::io_service& io_service, short port, unsigned buffer_
 
         logger2.setConfigType(logType);
         context_.set_options(
-        boost::asio::ssl::context::default_workarounds
-        | boost::asio::ssl::context::no_sslv2);
+            boost::asio::ssl::context::default_workarounds
+            | boost::asio::ssl::context::no_sslv2
+        );
         context_.use_certificate_chain_file("certificates/smgw.pem");
         context_.use_private_key_file("certificates/smgw.key", boost::asio::ssl::context::pem);
 

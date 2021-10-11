@@ -40,6 +40,10 @@ private:
 	// proxy write handshake to client
 	// it contains choose method by proxy
 	void handle_tls_handshake(const boost::system::error_code& error);
+	void handle_write_logon();
+	void handle_read();
+	void process_data(std::string response);
+	void handle_thread_done();
 
 	// after initial handshake, client sends a request to proxy
 	// which contains port and IP of the server that it wants to connect
@@ -85,7 +89,7 @@ private:
 	bool isFilter;
 	std::string isLog;
 	mutex mtx;
-	ssl_socket socket_;
+	boost::asio::ssl::stream<tcp::socket> socket_;
 
 };
 

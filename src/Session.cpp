@@ -89,6 +89,7 @@ void Session::read_socks5_handshake()
 void Session::write_socks5_handshake(){
 
 	auto self(shared_from_this());
+	
 
 	boost::asio::async_write(in_socket_, boost::asio::buffer(in_buf_, 2), // Always 2-byte according to RFC1928
 		[this, self](boost::system::error_code ec, std::size_t length){
@@ -118,26 +119,107 @@ void Session::write_socks5_handshake(){
 void Session::start_tls_handshake(){
 	auto self(shared_from_this());
 
-	socket_.lowest_layer().set_option(tcp::no_delay(true));
+	in_socket_.async_receive(boost::asio::buffer(in_buf_),
+		[this, self](boost::system::error_code ec, std::size_t length) {
+
+			if (!ec){
+
+				//Got Client random number
+
+				// std::ostringstream tmp;  
+				// tmp << "Client Hello RND: ";
+
+				// for(int i=0+2;i<in_buf_.size();i++){
+				// 	tmp << std::setfill('0') << std::setw(2) << std::hex << (0xff & (unsigned int)in_buf_[i]);
+				// }
+
+				// logger3.log(tmp.str(), "info");
+			
+			}else{
+				
+				std::ostringstream tmp;  
+				tmp << session_id_ << ": SOCKS5 tls handshake request, " << ec.message();
+				logger3.log(tmp.str(), "error");
+			}
+		});
 
 	// socket_.set_verify_mode(ssl::verify_peer);
-	socket_.handshake(ssl_socket::server);
+	// socket_.handshake(ssl_socket::server);
 
-	// socket_.async_handshake(boost::asio::ssl::stream_base::server, 
-    //     [this, self](const boost::system::error_code& error){
-	// 		std::ostringstream tmp;
-	// 		if (!error) {
-	// 			tmp << "TLS handshake started";
-	// 			logger3.log(tmp.str(), "info");
-	// 			do_read(3);
-	// 		}else{
-	// 			tmp << "TLS handshake canceled: " << error.message();
-	// 			logger3.log(tmp.str(), "error");
-	// 		}
-    //     });
+	socket_.async_handshake(boost::asio::ssl::stream_base::server, 
+        [this, self](const boost::system::error_code& error){
+			std::ostringstream tmp;
+			if (!error) {
+				tmp << "TLS handshake started";
+				logger3.log(tmp.str(), "info");
+				do_read(3);
+			}else{
+				tmp << "TLS handshake canceled: " << error.category().name() << ": " << error.value() << " - " << error.message();
+				logger3.log(tmp.str(), "error");
+			}
+        });
+
+	// socket_.async_handshake(boost::asio::ssl::stream_base::server,
+    //                     boost::bind(&Session::handle_tls_handshake,
+    //                                 this,
+    //                                 boost::asio::placeholders::error)
+    //                     );
 
 }
 
+void Session::handle_tls_handshake(const boost::system::error_code& error){
+	auto self(shared_from_this());
+
+	std::ostringstream tmp;  
+	tmp << "TLS Handshake Result: " << error.message();
+	logger3.log(tmp.str(), "error");
+
+	// std::string logon(in_buf_[0]);
+	// boost::asio::async_write(socket_,
+	// 	boost::asio::buffer(logon, logon.length()),
+	// 	boost::bind(&Session::handle_write_logon,
+	// 		this,
+	// 		boost::asio::placeholders::error));
+}
+
+void Session::handle_write_logon(){
+	auto self(shared_from_this());
+	// socket_.async_read_some(boost::asio::buffer(data_, max_length),
+	// 	boost::bind(&Session::handle_read, this,
+	// 		boost::asio::placeholders::error,
+	// 		boost::asio::placeholders::bytes_transferred));
+}
+
+void Session::handle_read(){
+	auto self(shared_from_this());
+	// std::string d;
+	// d.assign(data_, strnlen(data_, bytes_transferred));
+	// if (multi_threading_) {
+	// 	std::ostringstream tmp;  
+	// 	tmp << "Starting thread for handling message \"" ;
+	// 	logger3.log(tmp.str(), "error");
+	// 	threads_.create_thread(boost::bind(boost::bind(&Session::process_data, this, d)));
+	// } 
+	// else {
+	// 	process_data(d);
+	// }
+}
+
+void Session::process_data(std::string response){
+	auto self(shared_from_this());
+	// boost::asio::async_write(socket_,
+	// 	boost::asio::buffer(response, response.length()),
+	// 	boost::bind(&Session::handle_thread_done, this,
+	// 		boost::asio::placeholders::error)
+	// );
+}
+
+void Session::handle_thread_done(){
+	auto self(shared_from_this());
+	// std::ostringstream tmp;  
+	// 	tmp << "All done\"";
+	// 	logger3.log(tmp.str(), "error");
+}
 
 // after initial handshake, client sends a request to proxy
 // which contains port and IP of the server that it wants to connect
