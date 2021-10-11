@@ -119,30 +119,6 @@ void Session::write_socks5_handshake(){
 void Session::start_tls_handshake(){
 	auto self(shared_from_this());
 
-	in_socket_.async_receive(boost::asio::buffer(in_buf_),
-		[this, self](boost::system::error_code ec, std::size_t length) {
-
-			if (!ec){
-
-				//Got Client random number
-
-				// std::ostringstream tmp;  
-				// tmp << "Client Hello RND: ";
-
-				// for(int i=0+2;i<in_buf_.size();i++){
-				// 	tmp << std::setfill('0') << std::setw(2) << std::hex << (0xff & (unsigned int)in_buf_[i]);
-				// }
-
-				// logger3.log(tmp.str(), "info");
-			
-			}else{
-				
-				std::ostringstream tmp;  
-				tmp << session_id_ << ": SOCKS5 tls handshake request, " << ec.message();
-				logger3.log(tmp.str(), "error");
-			}
-		});
-
 	// socket_.set_verify_mode(ssl::verify_peer);
 	// socket_.handshake(ssl_socket::server);
 
@@ -152,7 +128,31 @@ void Session::start_tls_handshake(){
 			if (!error) {
 				tmp << "TLS handshake started";
 				logger3.log(tmp.str(), "info");
-				do_read(3);
+				// do_read(3);
+				in_socket_.async_receive(boost::asio::buffer(in_buf_),
+					[this, self](boost::system::error_code ec, std::size_t length) {
+
+						if (!ec){
+
+							//Got Client random number
+
+							// std::ostringstream tmp;  
+							// tmp << "Client Hello RND: ";
+
+							// for(int i=0+2;i<in_buf_.size();i++){
+							// 	tmp << std::setfill('0') << std::setw(2) << std::hex << (0xff & (unsigned int)in_buf_[i]);
+							// }
+
+							// logger3.log(tmp.str(), "info");
+						
+						}else{
+							
+							std::ostringstream tmp;  
+							tmp << session_id_ << ": SOCKS5 tls handshake request, " << ec.message();
+							logger3.log(tmp.str(), "error");
+						}
+					});
+
 			}else{
 				tmp << "TLS handshake canceled: " << error.category().name() << ": " << error.value() << " - " << error.message();
 				logger3.log(tmp.str(), "error");
